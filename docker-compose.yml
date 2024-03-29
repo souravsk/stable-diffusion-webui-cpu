@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  stablediff-cpu:
+    build: 
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: stablediff-cpu-runner
+    environment:
+      TZ: "Asia/Jakarta"
+      COMMANDLINE_ARGS: "--listen --no-half --skip-torch-cuda-test"
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      ". /stablediff.env; echo launch.py $$COMMANDLINE_ARGS;
+      if [ ! -d /stablediff-web/.git ]; then
+        cp -a /sdtemp/. /stablediff-web/
+      fi;
+      if [ ! -f /stablediff-web/models/Stable-diffusion/*.safetensors]; then
+        echo 'Please copy stable diffusion model to stablediff-models directory'
+        echo 'You may need sudo to perform this action'
+        exit 1
+      fi;
+      python launch.py"
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./stablediff.env:/stablediff.env
+      - ./stablediff-web:/stablediff-web
+      - ./stablediff-models:/stablediff-web/models/Stable-diffusion
